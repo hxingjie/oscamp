@@ -46,7 +46,7 @@ members = [
     "exercises/support_hashmap",
     "exercises/alt_alloc",
 
-    "examples/shell",
+    "labs/lab1",
 ]
 
 [workspace.package]
