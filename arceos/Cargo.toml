@@ -45,7 +45,7 @@ members = [
     "exercises/print_with_color",
     "exercises/support_hashmap",
     "exercises/alt_alloc",
-
+    "exercises/test_0",
     "examples/shell",
 ]
 
