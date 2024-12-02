@@ -16,6 +16,8 @@ extern "C" {
     fn rust_main(cpu_id: usize, dtb: usize);
     #[cfg(feature = "smp")]
     fn rust_main_secondary(cpu_id: usize);
+
+    fn main();  // 从外部引入main函数
 }
 
 unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
@@ -24,6 +26,10 @@ unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     crate::arch::set_trap_vector_base(trap_vector_base as usize);
     self::time::init_early();
     rust_main(cpu_id, dtb);
+
+    // my code
+    //main();
+    //self::misc::terminate();  // 程序运行后终止
 }
 
 #[cfg(feature = "smp")]

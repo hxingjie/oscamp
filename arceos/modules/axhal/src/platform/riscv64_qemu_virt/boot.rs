@@ -37,6 +37,7 @@ unsafe extern "C" fn _start() -> ! {
         add     sp, sp, t0              // setup boot stack
 
         call    {init_boot_page_table}
+        call {console_putchar} // my code
         call    {init_mmu}              // setup boot page table and enabel MMU
 
         li      s2, {phys_virt_offset}  // fix up virtual high address
@@ -52,6 +53,7 @@ unsafe extern "C" fn _start() -> ! {
         boot_stack_size = const TASK_STACK_SIZE,
         boot_stack = sym BOOT_STACK,
         init_boot_page_table = sym init_boot_page_table,
+        console_putchar = sym console_putchar, // my code
         init_mmu = sym init_mmu,
         entry = sym super::rust_entry,
         options(noreturn),
@@ -86,4 +88,30 @@ unsafe extern "C" fn _start_secondary() -> ! {
         entry = sym super::rust_entry_secondary,
         options(noreturn),
     )
+}
+
+use crate::console::putchar;
+unsafe fn console_putchar() {
+    putchar(10); // 打印换行符
+
+    putchar(72); // 打印"H“
+    putchar(69); // 打印"E“
+    putchar(76); // 打印"L“
+    putchar(76); // 打印"L“
+    putchar(79); // 打印"O“
+
+    putchar(32); // 打印" “
+
+    putchar(70); // 打印"F“
+    putchar(82); // 打印"R“
+    putchar(79); // 打印"O“
+    putchar(77); // 打印"M“
+
+    putchar(32); // 打印" “
+
+    putchar(83); // 打印"S“
+    putchar(66); // 打印"B“
+    putchar(73); // 打印"I“
+
+    putchar(10); // 打印换行符
 }
