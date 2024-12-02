@@ -27,6 +27,9 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("pwd", do_pwd),
     ("rm", do_rm),
     ("uname", do_uname),
+
+    ("rename", do_rename), // my code
+  	("mv", do_mv), // my code
 ];
 
 fn file_type_to_char(ty: FileType) -> char {
@@ -258,6 +261,109 @@ fn do_uname(_args: &str) {
         arch = arch,
         plat = platform,
     );
+}
+
+fn do_rename(args: &str) { // my code
+    let (old_name, new_name) = split_whitespace(args);
+    if old_name == new_name {
+        print_err!("rename", "old name == new name");
+        return;
+    }
+
+    fn rename_one(old_name: &str, new_name: &str) -> io::Result<()> {
+        fs::rename(old_name, new_name)?;
+        Ok(())
+    }
+    
+    if let Err(err) = rename_one(old_name, new_name) {
+        print_err!("rename", err);
+    }
+}
+
+fn do_mv(args: &str) { // my code
+    fn my_rm(path: &str) -> io::Result<()> {
+        if fs::metadata(path)?.is_dir() {
+            fs::remove_dir(path)
+        } else {
+            fs::remove_file(path)
+        }
+    }
+
+    fn my_mv_file(src_path: &str, file_path: &str, file_name: &str, tar_path: &str) -> io::Result<()> {
+        // cd tar path
+        std::env::set_current_dir(file_path)?;
+
+        // cp files
+        let mut buf = [0_u8; 1024];
+        let mut file = File::open(file_name).unwrap();
+        file.read(&mut buf)?;
+        my_rm(file_name)?;
+
+        // cd tar path
+        std::env::set_current_dir(tar_path)?;
+
+        let mut file = File::create(file_name).unwrap();
+        file.write_all(&buf)?;
+
+        std::env::set_current_dir(src_path)
+    }
+
+    fn my_mv (old_path: &str, tar_path: &str) -> io::Result<()>{
+        // old_path: file or dir, tar_path: dir
+        // path is absolute
+        // /dira /dirb
+        // /a.txt /dirb
+
+        let pwd = std::env::current_dir().unwrap();
+        let src_path = path_to_str!(pwd); // call func's path
+
+        if fs::metadata(old_path)?.is_dir() {
+            let dir_name = if let Some(pos) = old_path.rfind('/') {
+                &old_path[pos+1..]
+            } else {
+                old_path
+            };
+            std::env::set_current_dir(tar_path)?;
+            fs::create_dir(dir_name)?;
+            std::env::set_current_dir(src_path)?;
+
+            let tar_path = String::from(tar_path) + "/" + dir_name;
+            let tar_path = tar_path.as_str();
+
+            let entries = fs::read_dir(old_path)?
+                .filter_map(|e| e.ok())
+                .map(|e| e.file_name())
+                .collect::<Vec<_>>();
+
+            for entry in entries {
+                let entry = path_to_str!(entry);
+                let mut path = String::from(old_path) + "/" + entry;
+                if fs::metadata(path.as_str())?.is_dir() {
+                    path.push('/');
+                    my_mv(path.as_str(), tar_path)?;
+                } else {
+                    my_mv_file(src_path, old_path, entry, tar_path)?;
+                }
+            }
+
+            my_rm(old_path)
+        } else {
+            let (file_path, file_name) = 
+                if let Some(pos) = old_path.rfind('/') {
+                    (&old_path[..=pos], &old_path[pos+1..])
+                } else {
+                    (src_path, old_path)
+                };
+
+            my_mv_file(src_path, file_path, file_name, tar_path)
+        }
+    }
+
+    let (old_path, tar_path) = split_whitespace(args);    
+    if let Err(err) = my_mv(old_path, tar_path) {
+        print_err!("mv", err);
+    }
+    
 }
 
 fn do_help(_args: &str) {
