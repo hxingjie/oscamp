@@ -75,3 +75,19 @@ pub mod time;
 pub mod fs;
 #[cfg(feature = "net")]
 pub mod net;
+
+pub mod my_collections;
+
+pub fn println_with_color(msg: &str, color: &str) {
+    // "\x1b[34m{}\x1b[0m\n"
+    let color = match color {
+        "black" => "\x1b[30m",
+        "red" => "\x1b[31m",
+        "green" => "\x1b[32m",
+        "yellow" => "\x1b[33m",
+        "blue" => "\x1b[34m",
+        _ => "\x1b[30m",
+    };
+
+    println!("{}[WithColor]: {}\x1b[0m", color, msg);
+}

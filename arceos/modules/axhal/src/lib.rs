@@ -64,7 +64,17 @@ pub mod console {
 
     /// Write a slice of bytes to the console.
     pub fn write_bytes(bytes: &[u8]) {
+        let beg = b"\x1b[34m";
+        for c in beg {
+            putchar(*c);
+        }
+
         for c in bytes {
+            putchar(*c);
+        }
+
+        let end = b"\x1b[0m";
+        for c in end {
             putchar(*c);
         }
     }
